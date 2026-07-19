@@ -5,8 +5,6 @@ mod telemetry;
 use crate::connection::init_connection;
 use crate::gui::orbit_visualization::OrbitApp;
 use crate::telemetry::get_telemetry;
-use eframe::egui;
-
 fn main() {
     let space_center = match init_connection() {
         Ok(sc) => sc,
@@ -29,12 +27,8 @@ fn main() {
         "ksp-mocr",
         native_options,
         Box::new(|cc| {
-            cc.egui_ctx.set_theme(egui::Theme::Dark);
-            cc.egui_ctx.set_visuals(egui::Visuals { panel_fill: egui::Color32::BLACK, window_fill: egui::Color32::BLACK,
-                // cool thing i found in the documentation for structs :3
-                ..egui::Visuals::dark()
-            });
-            Ok(Box::new(OrbitApp {telemetry}))
+            gui::theme::apply(&cc.egui_ctx);
+            Ok(Box::new(OrbitApp { telemetry }))
         }),
     ).unwrap();
 }
