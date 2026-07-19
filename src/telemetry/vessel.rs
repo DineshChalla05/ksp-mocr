@@ -1,5 +1,5 @@
 use krpc_client::error::RpcError;
-use krpc_client::services::space_center::{Flight, ReferenceFrame, Vessel};
+use krpc_client::services::space_center::{Flight, ReferenceFrame, Vessel, VesselSituation};
 use krpc_client::stream::Stream;
 
 pub fn init_flight(vessel: &Vessel, reference_frame: &ReferenceFrame) -> Result<Flight, RpcError> {
@@ -37,3 +37,51 @@ pub fn init_liquid_fuel_stream(vessel: &Vessel, rate: f32) -> Result<Stream<f32>
     Ok(fuel_stream)
 }
 
+
+pub fn init_pitch_stream(flight: &Flight, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let pitch_stream = flight.get_pitch_stream()?;
+    pitch_stream.set_rate(rate)?;
+    Ok(pitch_stream)
+}
+
+pub fn init_heading_stream(flight: &Flight, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let heading_stream = flight.get_heading_stream()?;
+    heading_stream.set_rate(rate)?;
+    Ok(heading_stream)
+}
+
+pub fn init_roll_stream(flight: &Flight, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let roll_stream = flight.get_roll_stream()?;
+    roll_stream.set_rate(rate)?;
+    Ok(roll_stream)
+}
+
+pub fn init_dynamic_pressure_stream(flight: &Flight, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let q_stream = flight.get_dynamic_pressure_stream()?;
+    q_stream.set_rate(rate)?;
+    Ok(q_stream)
+}
+
+pub fn init_g_force_stream(flight: &Flight, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let g_stream = flight.get_g_force_stream()?;
+    g_stream.set_rate(rate)?;
+    Ok(g_stream)
+}
+// mission elapsed time cause I keep forgetting.
+pub fn init_met_stream(vessel: &Vessel, rate: f32) -> Result<Stream<f64>, RpcError> {
+    let met_stream = vessel.get_met_stream()?;
+    met_stream.set_rate(rate)?;
+    Ok(met_stream)
+}
+
+pub fn init_situation_stream(vessel: &Vessel, rate: f32) -> Result<Stream<VesselSituation>, RpcError> {
+    let situation_stream = vessel.get_situation_stream()?;
+    situation_stream.set_rate(rate)?;
+    Ok(situation_stream)
+}
+
+pub fn init_thrust_stream(vessel: &Vessel, rate: f32) -> Result<Stream<f32>, RpcError> {
+    let thrust_stream = vessel.get_thrust_stream()?;
+    thrust_stream.set_rate(rate)?;
+    Ok(thrust_stream)
+}

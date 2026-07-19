@@ -1,15 +1,31 @@
+mod control;
 mod orbit;
 mod vessel;
 
 use krpc_client::error::RpcError;
-use krpc_client::services::space_center::{CelestialBody, SpaceCenter};
+use krpc_client::services::space_center::{CelestialBody, SpaceCenter, VesselSituation};
 use krpc_client::stream::Stream;
 use std::fmt;
 use std::fmt::Formatter;
 
 pub enum BodyNames {
-    Kerbol, Eve, Gilly, Dres, Mun, Kerbin, Minmus, Moho, Duna, Ike,
-    Jool, Laythe, Bop, Pol, Vall, Tylo, Eeloo,
+    Kerbol,
+    Eve,
+    Gilly,
+    Dres,
+    Mun,
+    Kerbin,
+    Minmus,
+    Moho,
+    Duna,
+    Ike,
+    Jool,
+    Laythe,
+    Bop,
+    Pol,
+    Vall,
+    Tylo,
+    Eeloo,
 }
 
 impl fmt::Display for BodyNames {
@@ -49,6 +65,16 @@ pub struct Telemetry {
     pub horizontal_speed: Stream<f64>,
     pub mass: Stream<f32>,
     pub liquid_fuel: Stream<f32>,
+    pub current_stage: Stream<i32>,
+    pub throttle: Stream<f32>,
+    pub pitch: Stream<f32>,
+    pub heading: Stream<f32>,
+    pub roll: Stream<f32>,
+    pub dynamic_pressure: Stream<f32>,
+    pub g_force: Stream<f32>,
+    pub met: Stream<f64>,
+    pub situation: Stream<VesselSituation>,
+    pub thrust: Stream<f32>,
 }
 
 fn init_ut_stream(space_center: &SpaceCenter, rate: f32) -> Result<Stream<f64>, RpcError> {
@@ -63,6 +89,7 @@ pub fn get_telemetry(space_center: SpaceCenter) -> Result<Telemetry, RpcError> {
     let body: CelestialBody = orbit.get_body()?;
     let surface_reference_frame = body.get_reference_frame()?;
     let flight = vessel::init_flight(&vessel, &surface_reference_frame)?;
+    let control = control::init_control(&vessel)?;
 
     Ok(Telemetry {
         ut: init_ut_stream(&space_center, 1f32)?,
@@ -77,5 +104,15 @@ pub fn get_telemetry(space_center: SpaceCenter) -> Result<Telemetry, RpcError> {
         horizontal_speed: vessel::init_horizontal_speed_stream(&flight, 1f32)?,
         mass: vessel::init_mass_stream(&vessel, 1f32)?,
         liquid_fuel: vessel::init_liquid_fuel_stream(&vessel, 1f32)?,
+        current_stage: control::init_current_stage_stream(&control, 1f32)?,
+        throttle: control::init_throttle_stream(&control, 1f32)?,
+        pitch: vessel::init_pitch_stream(&flight, 1f32)?,
+        heading: vessel::init_heading_stream(&flight, 1f32)?,
+        roll: vessel::init_roll_stream(&flight, 1f32)?,
+        dynamic_pressure: vessel::init_dynamic_pressure_stream(&flight, 1f32)?,
+        g_force: vessel::init_g_force_stream(&flight, 1f32)?,
+        met: vessel::init_met_stream(&vessel, 1f32)?,
+        situation: vessel::init_situation_stream(&vessel, 1f32)?,
+        thrust: vessel::init_thrust_stream(&vessel, 1f32)?,
     })
 }

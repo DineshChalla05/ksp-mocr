@@ -1,9 +1,10 @@
 mod connection;
+mod flight_state;
 mod gui;
 mod telemetry;
 
 use crate::connection::init_connection;
-use crate::gui::orbit_visualization::OrbitApp;
+use crate::gui::mocr_app::MocrApp;
 use crate::telemetry::get_telemetry;
 fn main() {
     let space_center = match init_connection() {
@@ -27,8 +28,9 @@ fn main() {
         "ksp-mocr",
         native_options,
         Box::new(|cc| {
-            gui::theme::apply(&cc.egui_ctx);
-            Ok(Box::new(OrbitApp { telemetry }))
+            crate::gui::theme::apply(&cc.egui_ctx);
+            Ok(Box::new(MocrApp::new(telemetry)))
         }),
-    ).unwrap();
+    )
+    .unwrap();
 }
