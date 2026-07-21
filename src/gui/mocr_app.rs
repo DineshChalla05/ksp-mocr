@@ -1,9 +1,11 @@
+use crate::command::VesselControl;
 use crate::flight_state::FlightState;
 use crate::gui::booster_console::BoosterConsole;
 use crate::gui::console::Console;
 use crate::gui::fido_console::FidoConsole;
 use crate::gui::guido_console::GuidoConsole;
 use crate::gui::theme::RETRO_RED;
+use crate::session_guard::SessionGuard;
 use crate::telemetry::Telemetry;
 use eframe::{Frame, egui};
 use egui::Ui;
@@ -12,12 +14,16 @@ use krpc_client::services::space_center::VesselSituation;
 pub struct MocrApp {
     telemetry: Telemetry,
     flight_state: FlightState,
+    session_guard: SessionGuard,
+    discontinuity_notice: bool,
+    vessel_control: VesselControl,
+    control_armed: bool,
     consoles: Vec<Box<dyn Console>>,
     active: usize,
 }
 
 impl MocrApp {
-    pub fn new(telemetry: Telemetry) -> Self {
+    pub fn new(telemetry: Telemetry, vessel_control: VesselControl) -> Self {
         let consoles: Vec<Box<dyn Console>> = vec![
             Box::new(FidoConsole),
             Box::new(BoosterConsole),
@@ -26,6 +32,10 @@ impl MocrApp {
         Self {
             telemetry,
             flight_state: FlightState::init_flight_state(),
+            session_guard: SessionGuard::init_session_guard(),
+            discontinuity_notice: false,
+            vessel_control,
+            control_armed: false,
             consoles,
             active: 0,
         }
@@ -46,6 +56,13 @@ impl eframe::App for MocrApp {
         let dynamic_pressure = self.telemetry.dynamic_pressure.get().unwrap_or(0.0);
         let thrust = self.telemetry.thrust.get().unwrap_or(0.0);
         let g_force = self.telemetry.g_force.get().unwrap_or(0.0);
+
+        if self.session_guard.tick(met) {
+            self.control_armed = false;
+            self.flight_state = FlightState::init_flight_state();
+            self.discontinuity_notice = true;
+        }
+
         self.flight_state.tick(
             met,
             current_stage,
@@ -60,6 +77,30 @@ impl eframe::App for MocrApp {
                 ui.heading(egui::RichText::new("MOCR").color(RETRO_RED));
                 ui.separator();
                 ui.label(format!("MET: T+{:.0}s", met));
+                ui.separator();
+
+                ui.checkbox(&mut self.control_armed, "CONTROL ARMED");
+
+                let stage_clicked = ui
+                    .add_enabled(self.control_armed, egui::Button::new("ACTIVATE NEXT STAGE"))
+                    .clicked();
+
+                if stage_clicked {
+                    if let Err(err) = self.vessel_control.activate_next_stage() {
+                        eprintln!("Failed to activate next stage: {}", err);
+                    }
+                }
+
+                if self.discontinuity_notice {
+                    egui::Panel::top("discontinuity_banner").show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.colored_label(RETRO_RED, "SESSION DISCONTINUITY DETECTED. CONTROL DISARMED. FLIGHT LOG RESET");
+                            if ui.button("ACKNOWLEDGE").clicked() {
+                                self.discontinuity_notice = false;
+                            }
+                        });
+                    });
+                }
             });
         });
 

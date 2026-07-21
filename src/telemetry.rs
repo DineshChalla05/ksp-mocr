@@ -87,7 +87,8 @@ fn init_ut_stream(space_center: &SpaceCenter, rate: f32) -> Result<Stream<f64>, 
     Ok(ut_stream)
 }
 
-pub fn get_telemetry(space_center: SpaceCenter) -> Result<Telemetry, RpcError> {
+// borrow space center instead of consuming it
+pub fn get_telemetry(space_center: &SpaceCenter) -> Result<Telemetry, RpcError> {
     let vessel = space_center.get_active_vessel()?;
     let orbit = vessel.get_orbit()?;
     let body: CelestialBody = orbit.get_body()?;
