@@ -4,6 +4,7 @@ use crate::gui::theme::{RETRO_AMBER, RETRO_BLUE, RETRO_GREEN, RETRO_GRID, RETRO_
 use crate::telemetry::Telemetry;
 use eframe::egui;
 use std::f64::consts::PI;
+use std::fmt::format;
 
 pub struct FidoConsole;
 
@@ -20,6 +21,7 @@ impl Console for FidoConsole {
         let body_radius = telemetry.body_radius;
         let inclination = telemetry.inclination.get().unwrap_or(0.0);
         let surface_speed = telemetry.surface_speed.get().unwrap_or(0.0);
+        let orbital_speed = telemetry.orbital_speed.get().unwrap_or(0.0);
 
         let apoapsis_r = apoapsis + body_radius;
         let periapsis_r = periapsis + body_radius;
@@ -41,6 +43,7 @@ impl Console for FidoConsole {
             ui.label(format!("Body radius: {:.0} m", body_radius));
             ui.label(format!("Inclination: {:.2} rad", inclination));
             ui.label(format!("Surface speed: {:.1} m/s", surface_speed));
+            ui.label(format!("Orbital Speed: {:.1} m/s", orbital_speed));
         });
 
         egui::CentralPanel::default().show(ui, |ui| {

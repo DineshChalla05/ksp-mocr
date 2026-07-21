@@ -75,6 +75,10 @@ pub struct Telemetry {
     pub met: Stream<f64>,
     pub situation: Stream<VesselSituation>,
     pub thrust: Stream<f32>,
+    pub period: Stream<f64>,
+    pub time_to_apoapsis: Stream<f64>,
+    pub time_to_periapsis: Stream<f64>,
+    pub orbital_speed: Stream<f64>,
 }
 
 fn init_ut_stream(space_center: &SpaceCenter, rate: f32) -> Result<Stream<f64>, RpcError> {
@@ -90,6 +94,8 @@ pub fn get_telemetry(space_center: SpaceCenter) -> Result<Telemetry, RpcError> {
     let surface_reference_frame = body.get_reference_frame()?;
     let flight = vessel::init_flight(&vessel, &surface_reference_frame)?;
     let control = control::init_control(&vessel)?;
+    let non_rotating_frame = body.get_non_rotating_reference_frame()?;
+    let orbital_flight = vessel::init_orbital_flight(&vessel, &non_rotating_frame)?;
 
     Ok(Telemetry {
         ut: init_ut_stream(&space_center, 1f32)?,
@@ -114,5 +120,9 @@ pub fn get_telemetry(space_center: SpaceCenter) -> Result<Telemetry, RpcError> {
         met: vessel::init_met_stream(&vessel, 1f32)?,
         situation: vessel::init_situation_stream(&vessel, 1f32)?,
         thrust: vessel::init_thrust_stream(&vessel, 1f32)?,
+        period: orbit::init_period_stream(&orbit, 1f32)?,
+        time_to_apoapsis: orbit::init_time_to_apoapsis_stream(&orbit, 1f32)?,
+        time_to_periapsis: orbit::init_time_to_periapsis_stream(&orbit, 1f32)?,
+        orbital_speed: vessel::init_orbital_speed_stream(&flight,1f32)?,
     })
 }

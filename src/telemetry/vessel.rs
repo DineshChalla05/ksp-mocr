@@ -85,3 +85,13 @@ pub fn init_thrust_stream(vessel: &Vessel, rate: f32) -> Result<Stream<f32>, Rpc
     thrust_stream.set_rate(rate)?;
     Ok(thrust_stream)
 }
+
+pub fn init_orbital_flight(vessel: &Vessel, non_rotating_frame: &ReferenceFrame) -> Result<Flight, RpcError> {
+    vessel.flight(Some(non_rotating_frame))
+}
+
+pub fn init_orbital_speed_stream(flight: &Flight, rate: f32) -> Result<Stream<f64>, RpcError> {
+    let speed_stream = flight.get_speed_stream()?;
+    speed_stream.set_rate(rate)?;
+    Ok(speed_stream)
+}
